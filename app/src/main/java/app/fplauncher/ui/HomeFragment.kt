@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.os.UserHandle
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -35,6 +36,7 @@ import app.fplauncher.databinding.FragmentHomeBinding
 import app.fplauncher.helper.appUsagePermissionGranted
 import app.fplauncher.helper.dpToPx
 import app.fplauncher.helper.expandNotificationDrawer
+import app.fplauncher.helper.getAppIcon
 import app.fplauncher.helper.getChangedAppTheme
 import app.fplauncher.helper.getUserHandleFromString
 import app.fplauncher.helper.isPackageInstalled
@@ -61,6 +63,9 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     private val binding get() = _binding!!
 
     private var dpadCenterDownTime = 0L
+    private var dpadDownKeyDownTime = 0L
+    private var dpadLeftKeyDownTime = 0L
+    private var dpadRightKeyDownTime = 0L
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -85,6 +90,9 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     override fun onResume() {
         super.onResume()
+        dpadDownKeyDownTime = 0L
+        dpadLeftKeyDownTime = 0L
+        dpadRightKeyDownTime = 0L
         populateHomeScreen(false)
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
@@ -258,11 +266,16 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                     }
 
                     KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        if (event.isLongPress || event.repeatCount > 2) {
-                            showAppList(Constants.FLAG_LAUNCH_APP)
+                        if (dpadDownKeyDownTime == 0L) dpadDownKeyDownTime = System.currentTimeMillis()
+                        // On first repeat count fire long-press, regardless of current focus
+                        if (event.repeatCount > 0) {
+                            val elapsed = System.currentTimeMillis() - dpadDownKeyDownTime
+                            if (elapsed >= Constants.LONG_PRESS_DELAY_MS) {
+                                dpadDownKeyDownTime = 0L
+                                showAppList(Constants.FLAG_LAUNCH_APP)
+                            }
                             return true
                         }
-                        if (event.repeatCount > 0) return true
                         if (focusedIndex < visibleApps.size - 1) {
                             visibleApps[focusedIndex + 1].requestFocus()
                         } else if (focusedIndex == visibleApps.size - 1) {
@@ -272,14 +285,28 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                     }
 
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
-                        if (event.repeatCount > 0) return true
-                        openSwipeLeftApp()
+                        if (dpadLeftKeyDownTime == 0L) dpadLeftKeyDownTime = System.currentTimeMillis()
+                        // Short press is a no-op; only long-press opens the swipe-left app
+                        if (event.repeatCount > 0) {
+                            val elapsed = System.currentTimeMillis() - dpadLeftKeyDownTime
+                            if (elapsed >= Constants.LONG_PRESS_DELAY_MS) {
+                                dpadLeftKeyDownTime = 0L
+                                openSwipeLeftApp()
+                            }
+                        }
                         return true
                     }
 
                     KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                        if (event.repeatCount > 0) return true
-                        openSwipeRightApp()
+                        if (dpadRightKeyDownTime == 0L) dpadRightKeyDownTime = System.currentTimeMillis()
+                        // Short press is a no-op; only long-press opens the swipe-right app
+                        if (event.repeatCount > 0) {
+                            val elapsed = System.currentTimeMillis() - dpadRightKeyDownTime
+                            if (elapsed >= Constants.LONG_PRESS_DELAY_MS) {
+                                dpadRightKeyDownTime = 0L
+                                openSwipeRightApp()
+                            }
+                        }
                         return true
                     }
                 }
@@ -294,6 +321,21 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                         if (focused != null && focusedIndex >= 0) {
                             onClick(focused)
                         }
+                        return true
+                    }
+
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        dpadDownKeyDownTime = 0L
+                        return true
+                    }
+
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        dpadLeftKeyDownTime = 0L
+                        return true
+                    }
+
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        dpadRightKeyDownTime = 0L
                         return true
                     }
                 }
@@ -494,13 +536,16 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                 // Check if our shortcut still exists
                 if (shortcuts?.any { it.id == shortcutId } == true) {
                     textView.text = appName
+                    setHomeAppIcon(textView, packageName, userHandle)
                     return true
                 }
                 textView.text = ""
+                setHomeAppIcon(textView, null, userHandle)
                 return false
             } catch (e: Exception) {
                 e.printStackTrace()
                 textView.text = ""
+                setHomeAppIcon(textView, null, userHandle)
                 return false
             }
         }
@@ -508,10 +553,24 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         // Regular app check
         if (isPackageInstalled(requireContext(), packageName, userString)) {
             textView.text = appName
+            setHomeAppIcon(textView, packageName, userHandle)
             return true
         }
         textView.text = ""
+        setHomeAppIcon(textView, null, userHandle)
         return false
+    }
+
+    private fun setHomeAppIcon(textView: TextView, packageName: String?, userHandle: UserHandle) {
+        if (packageName.isNullOrEmpty() || !prefs.showAppIcons) {
+            textView.setCompoundDrawablesRelative(null, null, null, null)
+            return
+        }
+        val icon = getAppIcon(requireContext(), packageName, userHandle)?.apply {
+            val size = 28.dpToPx()
+            setBounds(0, 0, size, size)
+        }
+        textView.setCompoundDrawablesRelative(icon, null, null, null)
     }
 
     private fun restoreHomeAppFocusability() {
