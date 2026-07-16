@@ -84,6 +84,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populateTextSize()
         populateAlignment()
         populateStatusBar()
+        populateShowAppIcons()
         populateDateTime()
         populateSwipeApps()
         populateSwipeDownAction()
@@ -130,6 +131,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.alignmentRight -> viewModel.updateHomeAlignment(Gravity.END)
             R.id.alignmentBottom -> updateHomeBottomAlignment()
             R.id.statusBar -> toggleStatusBar()
+            R.id.showAppIcons -> toggleShowAppIcons()
             R.id.dateTime -> binding.dateTimeSelectLayout.visibility = View.VISIBLE
             R.id.dateTimeOn -> toggleDateTime(Constants.DateTime.ON)
             R.id.dateTimeOff -> toggleDateTime(Constants.DateTime.OFF)
@@ -216,7 +218,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             binding.toggleLock, binding.homeAppsNum, binding.screenTimeOnOff,
             binding.dailyWallpaperUrl, binding.dailyWallpaper, binding.alignment,
             binding.alignmentLeft, binding.alignmentCenter, binding.alignmentRight,
-            binding.alignmentBottom, binding.statusBar, binding.dateTime,
+            binding.alignmentBottom, binding.statusBar, binding.showAppIcons, binding.dateTime,
             binding.dateTimeOn, binding.dateTimeOff, binding.dateOnly,
             binding.swipeLeftApp, binding.swipeRightApp, binding.swipeDownAction,
             binding.notifications, binding.search, binding.appThemeText,
@@ -252,6 +254,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.alignmentRight.setOnClickListener(this)
         binding.alignmentBottom.setOnClickListener(this)
         binding.statusBar.setOnClickListener(this)
+        binding.showAppIcons.setOnClickListener(this)
         binding.dateTime.setOnClickListener(this)
         binding.dateTimeOn.setOnClickListener(this)
         binding.dateTimeOff.setOnClickListener(this)
@@ -342,6 +345,16 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     private fun toggleStatusBar() {
         prefs.showStatusBar = !prefs.showStatusBar
         populateStatusBar()
+    }
+
+    private fun toggleShowAppIcons() {
+        prefs.showAppIcons = !prefs.showAppIcons
+        populateShowAppIcons()
+        viewModel.refreshHome(true)
+    }
+
+    private fun populateShowAppIcons() {
+        binding.showAppIcons.text = if (prefs.showAppIcons) getString(R.string.on) else getString(R.string.off)
     }
 
     private fun populateStatusBar() {
