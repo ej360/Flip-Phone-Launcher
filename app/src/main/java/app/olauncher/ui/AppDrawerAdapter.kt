@@ -20,6 +20,7 @@ import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.databinding.AdapterAppDrawerBinding
 import app.olauncher.databinding.AdapterPrivateSpaceHeaderBinding
+import app.olauncher.helper.getAppIcon
 import app.olauncher.helper.hideKeyboard
 import app.olauncher.helper.isSystemApp
 import app.olauncher.helper.showKeyboard
@@ -237,6 +238,7 @@ class AppDrawerAdapter(
             appHideLayout.visibility = View.GONE
             renameLayout.visibility = View.GONE
             appTitle.visibility = View.VISIBLE
+            appIcon.visibility = View.VISIBLE
 
             // Show indicators in title based on app type and state
             appTitle.text = buildString {
@@ -245,10 +247,11 @@ class AppDrawerAdapter(
             }
             appTitle.gravity = appLabelGravity
             otherProfileIndicator.isVisible = appModel.user != myUserHandle
+            appIcon.setImageDrawable(getAppIcon(root.context, appModel.appPackage, appModel.user))
 
-            appTitle.setOnClickListener { clickListener(appModel) }
+            appRow.setOnClickListener { clickListener(appModel) }
 
-            appTitle.setOnLongClickListener {
+            appRow.setOnLongClickListener {
                 if (appModel.appPackage.isNotEmpty()) {
                     appDelete.alpha = when (
                         appModel is AppModel.PinnedShortcut || !root.context.isSystemApp(appModel.appPackage, appModel.user)
@@ -261,6 +264,7 @@ class AppDrawerAdapter(
                     else
                         root.context.getString(R.string.adapter_hide)
                     appTitle.visibility = View.INVISIBLE
+                    appIcon.visibility = View.INVISIBLE
                     appHide.alpha = when (appModel is AppModel.PinnedShortcut) {
                         true -> 0.5f
                         false -> 1.0f
@@ -334,6 +338,7 @@ class AppDrawerAdapter(
             appMenuClose.setOnClickListener {
                 appHideLayout.visibility = View.GONE
                 appTitle.visibility = View.VISIBLE
+                appIcon.visibility = View.VISIBLE
             }
             appRenameClose.setOnClickListener {
                 renameLayout.visibility = View.GONE

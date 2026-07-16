@@ -188,6 +188,26 @@ private fun upgradeHiddenApps(prefs: Prefs) {
     prefs.hiddenAppsUpdated = true
 }
 
+private val appIconCache = android.util.LruCache<String, android.graphics.drawable.Drawable>(200)
+
+fun getAppIcon(context: Context, packageName: String, user: UserHandle): android.graphics.drawable.Drawable? {
+    if (packageName.isEmpty()) return null
+    val cacheKey = "$packageName|$user"
+    appIconCache.get(cacheKey)?.let { return it }
+    return try {
+        val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+        val activityList = launcherApps.getActivityList(packageName, user)
+        val icon = if (activityList.isNotEmpty())
+            activityList.first().getIcon(0)
+        else
+            context.packageManager.getApplicationIcon(packageName)
+        appIconCache.put(cacheKey, icon)
+        icon
+    } catch (_: Exception) {
+        null
+    }
+}
+
 fun isPackageInstalled(context: Context, packageName: String, userString: String): Boolean {
     val launcher = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
     val activityInfo = launcher.getActivityList(packageName, getUserHandleFromString(context, userString))
