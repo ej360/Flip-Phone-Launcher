@@ -20,7 +20,7 @@ Olauncher is a great minimal launcher, but it's designed for touchscreens. Flip 
 - Android device with a physical D-pad (tested on CAT S22 Flip)
 - Some features (like opening the notification panel) may require the launcher to be installed as a system app, or granted the `STATUS_BAR` permission via ADB:
   ```
-  adb shell pm grant <your.package.name> android.permission.STATUS_BAR
+  adb shell pm grant fpLauncher android.permission.STATUS_BAR
   ```
 
 ## Building
@@ -30,7 +30,7 @@ APKs are built automatically via GitHub Actions on every push. Grab the latest b
 If you'd rather build locally:
 
 ```
-git clone https://github.com/<your-username>/flip-phone-launcher.git
+git clone https://github.com/ej360/flip-phone-launcher.git
 cd flip-phone-launcher
 ./gradlew assembleDebug
 ```
