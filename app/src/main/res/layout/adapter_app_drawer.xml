@@ -6,18 +6,34 @@
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true">
 
-    <TextView
-        android:id="@+id/appTitle"
-        style="@style/TextLarge"
+    <LinearLayout
+        android:id="@+id/appRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/home_app_focus_bg"
         android:focusable="true"
         android:focusableInTouchMode="false"
-        android:maxLines="1"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingVertical="@dimen/app_padding_vertical"
-        android:text="@string/app" />
+        android:paddingVertical="@dimen/app_padding_vertical">
+
+        <ImageView
+            android:id="@+id/appIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/appTitle"
+            style="@style/TextLarge"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:text="@string/app" />
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/otherProfileIndicator"
