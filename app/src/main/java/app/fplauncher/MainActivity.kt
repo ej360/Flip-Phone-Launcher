@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.View
-import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -76,10 +75,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // Disable the legacy Window "default keys" fallback so unconsumed digit/CALL key
+        // Disable the legacy Activity "default keys" fallback so unconsumed digit/CALL key
         // events are never routed into search/dialer default handling by the framework,
         // and stay free for the device's native speed-dial hook.
-        window.setDefaultKeyMode(Window.DEFAULT_KEYS_DISABLE)
+        setDefaultKeyMode(Activity.DEFAULT_KEYS_DISABLE)
 
         navController = this.findNavController(R.id.nav_host_fragment)
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
